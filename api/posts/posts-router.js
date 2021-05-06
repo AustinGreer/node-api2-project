@@ -65,8 +65,47 @@ router.post('/', (req, res) => {
         })
     }
 })
-router.put('/:id', (req, res) => {
 
+router.put('/:id', (req, res) => {
+    const { title, contents  } = req.body 
+    const { id } = req.params
+    //we need to handle whether or not both title and contents have been filled out
+    // we need to handle whether the id of the post that is being edited actually exists
+    // we need to return the entire post altogether
+
+    if (!title || !contents) {
+        res.status(400).json({
+            message: "Please provide title and contents for the post"
+        })
+    } else {
+        Posts.findById(id)
+        .then(post => {
+            if (!post) {
+                res.status(404).json({
+                    message: "The post with the specified ID does not exist"
+                })
+            } else {
+                return Posts.update(id, req.body)
+            }
+        })
+        .then(entry => {
+            if (entry) {
+                return Posts.findById(id)
+            }
+        })
+        .then(post => {
+            if (post) {
+                res.json(post)
+            }
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: "The post information could not be modified",
+                error: err.message,
+                stack: err.stack
+            })
+        }) 
+    }
 })
 
 router.delete('/:id', (req, res) => {
