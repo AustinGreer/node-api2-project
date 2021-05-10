@@ -1,5 +1,4 @@
 // implement your posts router here
-// const router = require('express').Router()
 const express = require('express')
 const router = express.Router()
 const Posts = require('./posts-model')
@@ -108,13 +107,32 @@ router.put('/:id', (req, res) => {
     }
 })
 
-router.delete('/:id', (req, res) => {
+// delete removes specified post from the database and returns the post that was deleted
+/**
+ * Find post by the id
+ *  - if id does not exist, 404
+ * in that happy path, return Posts.remove
+ *  - if the entry exists, return the Post.findbyId
+ */
 
+router.delete('/:id', async (req, res) => {
+    try {
+        const postToDelete = await Posts.findById(req.params.id)
+        if (!postToDelete) {
+            res.status(404).json({
+                message: 'The post with the specified ID does not exist'
+            })
+        } else {
+            await Posts.remove(req.params.id)
+            res.json(postToDelete)
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "The post could not be removed",
+            error: err.message,
+            stack: err.stack
+        })
+    }
 })
-
-router.get('/:id/comments', (req, res) => {
-
-})
-
 
 module.exports = router
