@@ -18,6 +18,7 @@ router.get('/', (req, res) => {
     })
 })
 
+// get - gets a specified post by id if the post exists
 router.get('/:id', (req, res) => {
     const { id } = req.params
 
@@ -40,6 +41,7 @@ router.get('/:id', (req, res) => {
     })
 })
 
+// post - creates a new post if the post contains a title and contents in the body
 router.post('/', (req, res) => {
     const { title, contents } = req.body
 
@@ -65,12 +67,10 @@ router.post('/', (req, res) => {
     }
 })
 
+// put - updates post if the specified post exists
 router.put('/:id', (req, res) => {
     const { title, contents  } = req.body 
     const { id } = req.params
-    //we need to handle whether or not both title and contents have been filled out
-    // we need to handle whether the id of the post that is being edited actually exists
-    // we need to return the entire post altogether
 
     if (!title || !contents) {
         res.status(400).json({
@@ -107,14 +107,7 @@ router.put('/:id', (req, res) => {
     }
 })
 
-// delete removes specified post from the database and returns the post that was deleted
-/**
- * Find post by the id
- *  - if id does not exist, 404
- * in that happy path, return Posts.remove
- *  - if the entry exists, return the Post.findbyId
- */
-
+// delete - removes specified post from database and returns deleted post
 router.delete('/:id', async (req, res) => {
     try {
         const postToDelete = await Posts.findById(req.params.id)
@@ -129,6 +122,28 @@ router.delete('/:id', async (req, res) => {
     } catch (err) {
         res.status(500).json({
             message: "The post could not be removed",
+            error: err.message,
+            stack: err.stack
+        })
+    }
+})
+
+// get - returns an arrayof all the comment objects regarding specified post
+router.get('/:id/comments', async (req, res) => {
+    try {
+        const postId = await Posts.findById(req.params.id)
+
+        if (!postId) {
+            res.status(404).json({
+                message: "The post with the specified ID does not exist"
+            })
+        } else {
+            const postWithComments = await Posts.findPostComments(req.params.id)
+            res.json(postWithComments)
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "The comments information could not be retrieved",
             error: err.message,
             stack: err.stack
         })
